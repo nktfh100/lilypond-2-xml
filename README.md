@@ -46,8 +46,6 @@ export default defineConfig({
 
 The browser loads about 31 MB of compiler files on first use.
 
-See the [frontend setup](frontend/README.md) for local development and Cloudflare Workers deployment.
-
 ## Support & limitations
 
 The converter uses LilyPond 2.26.0. MIDI-only scores aren't supported.
