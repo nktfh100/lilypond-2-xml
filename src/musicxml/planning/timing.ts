@@ -94,14 +94,12 @@ export function scoreTiming({
         ? events.filter((e) => e.kind === 'barline')
         : events
             .filter((e) => e.class === 'bar-event')
-            .map(
-              (e): Extract<Event, { kind: 'barline' }> => ({
-                moment: e.moment,
-                kind: 'barline' as const,
-                glyph: e.barType,
-                hidden: false,
-              }),
-            ),
+            .map((e): Extract<Event, { kind: 'barline' }> => ({
+              moment: e.moment,
+              kind: 'barline' as const,
+              glyph: e.barType,
+              hidden: false,
+            })),
   };
 }
 

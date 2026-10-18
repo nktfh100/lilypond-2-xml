@@ -93,19 +93,17 @@ export function planScore(document: ScoreDocument, normalized: NormalizedScore, 
               eventTime(n) + durationValue(n.duration) > eventTime(f),
           ),
       )
-      .map(
-        (f): NoteLike => ({
-          kind: 'rest',
-          staff: f.staff,
-          voice: f.context,
-          duration: f.duration,
-          moment: f.moment,
-          hidden: true,
-          stemHidden: true,
-          attachments: [],
-          figureAnchor: true,
-        }),
-      ),
+      .map((f): NoteLike => ({
+        kind: 'rest',
+        staff: f.staff,
+        voice: f.context,
+        duration: f.duration,
+        moment: f.moment,
+        hidden: true,
+        stemHidden: true,
+        attachments: [],
+        figureAnchor: true,
+      })),
   );
   const sourceFinish = Math.max(
     0,
