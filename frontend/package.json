@@ -12,6 +12,7 @@
     "dev": "vite --host 0.0.0.0",
     "prebuild": "npm --prefix .. run build:listener",
     "build": "npm run typecheck && vite build",
+    "build:cloudflare": "npm --prefix .. ci --include=dev && npm run build",
     "preview": "vite preview --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -47,6 +48,7 @@
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.2",
-    "vite": "7.3.7"
+    "vite": "7.3.7",
+    "wrangler": "4.151.1"
   }
 }
