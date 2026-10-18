@@ -101,5 +101,8 @@
     "typescript-eslint": "8.71.2",
     "verovio": "6.3.0",
     "vite": "7.3.7"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
