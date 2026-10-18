@@ -82,7 +82,7 @@ export function ConverterWorkspace() {
       {state.status === 'success' && <ScoreComparison input={input} output={state.output} />}
       <footer className='page-footer'>
         <a
-          href='https://github.com/nktfh100/piano/tree/main/lilypond-2-xml'
+          href='https://github.com/nktfh100/lilypond-2-xml'
           target='_blank'
           rel='noreferrer'
         >

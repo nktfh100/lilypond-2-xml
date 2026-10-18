@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    exclude-paths:
+      - frontend/**
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase
+    groups:
+      production-minor-and-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-minor-and-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
