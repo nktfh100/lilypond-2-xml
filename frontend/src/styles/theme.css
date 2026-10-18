@@ -1,0 +1,107 @@
+:root {
+  font-family: 'Rubik Variable', sans-serif;
+  color: #292522;
+  background: #faf8f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --background: #faf8f5;
+  --foreground: #292522;
+  --card: #fffdfa;
+  --card-foreground: #292522;
+  --popover: #fffdfa;
+  --popover-foreground: #292522;
+  --primary: #a83c3c;
+  --primary-foreground: #fff;
+  --secondary: #eeeae5;
+  --secondary-foreground: #49413b;
+  --muted: #f1eee9;
+  --muted-foreground: #736b63;
+  --accent: #f3e7e1;
+  --accent-foreground: #883b31;
+  --destructive: #a52f2f;
+  --border: #e4ded6;
+  --input: #e4ded6;
+  --ring: #b43f3f;
+  --radius: 0.75rem;
+  --ember: #c6894d;
+  --paper: #fff;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --font-sans: 'Rubik Variable', sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button:not(:disabled),
+summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button,
+a,
+summary,
+select,
+textarea,
+[tabindex] {
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+}
+::selection {
+  background: var(--accent);
+  color: var(--foreground);
+}
+button[data-slot='button'] {
+  min-height: 44px;
+  transition:
+    background-color 160ms,
+    color 160ms,
+    transform 160ms var(--ease-out);
+}
+button[data-slot='button']:active:not(:disabled) {
+  transform: scale(0.97);
+}
+button svg {
+  width: 17px;
+  height: 17px;
+}

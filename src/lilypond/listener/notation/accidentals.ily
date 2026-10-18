@@ -1,0 +1,77 @@
+% Retain identities, never request accidental ink before normal page printing.
+#(define xml-accidental-originals '())
+#(define xml-accidental-count 0)
+#(define (xml-reset-accidentals!)
+ (set! xml-accidental-originals '()) (set! xml-accidental-count 0))
+#(define (xml-accidental-cause grob)
+ (let loop ((cause (ly:grob-property-data grob 'cause)))
+  (cond ((ly:grob? cause) (loop (ly:grob-property-data cause 'cause)))
+        ((ly:stream-event? cause) cause) (else #f))))
+#(define (xml-accidental-engraver ctx)
+ (make-engraver
+  (acknowledgers
+   ((accidental-interface engraver grob source)
+    (let* ((cause (xml-accidental-cause grob))
+            (candidate (ly:grob-property-data grob 'after-line-breaking))
+            (after (if (procedure? candidate)
+              (or (procedure-property candidate 'xml-normal-original-after) candidate) candidate)))
+      (set! xml-accidental-count (+ 1 xml-accidental-count))
+      (set! xml-accidental-originals
+       (cons (list grob xml-accidental-count
+          (and cause (ly:event-property cause 'ed-note-id #f))
+          (ed-context-id ctx) (ly:context-current-moment ctx)
+          (xml-barline-stencil-data grob) after (assoc-get 'name (ly:grob-property grob 'meta)))
+        xml-accidental-originals)))))))
+#(define (xml-final-accidentals)
+ (let* ((systems (if (ly:grob? xml-geometry-root-system) (xml-geometry-broken-pieces xml-geometry-root-system) '()))
+        (members (make-hash-table)) (index 0))
+  (for-each (lambda (system)
+   (set! index (+ index 1))
+   (let ((array (ly:grob-object system 'all-elements #f)))
+    (when (ly:grob-array? array)
+     (for-each (lambda (grob)
+      (when (and (ly:item? grob) (grob::has-interface grob 'accidental-interface)
+        (eq? (ly:grob-system grob) system) (grob::is-live? grob))
+       (let* ((original (or (ly:grob-original grob) grob))
+              (previous (hashq-ref members original '())))
+        (unless (assq grob previous)
+         (hashq-set! members original (cons (cons grob index) previous))))))
+      (ly:grob-array->list array))))) systems)
+  (map (lambda (entry)
+   (let* ((original (car entry)) (moment (list-ref entry 4))
+          (raw (list-ref entry 5)) (after (list-ref entry 6))
+          (custom (or (not (memq raw (list #f ly:accidental-interface::print)))
+            (not (or (null? after) (eq? after #f) (eq? after ly:accidental-interface::remove-tied)))))
+          (piece 0))
+    `((k . accidental-graphic) (id . ,(cadr entry))
+      (grob . ,(list-ref entry 7)) (nid . ,(or (list-ref entry 2) 'null))
+      (s . ,(list-ref entry 3)) (m . ,(ly:moment-main moment)) (g . ,(ly:moment-grace moment))
+      (pieces . ,(list->vector (map (lambda (member)
+       (set! piece (+ 1 piece))
+       (let* ((grob (car member)) (stencil (ly:grob-property-data grob 'stencil))
+              (transparent (ly:grob-property-data grob 'transparent))
+              (glyph (ly:grob-property-data grob 'glyph-name)))
+        `((system . ,(cdr member)) (piece . ,piece)
+          (hidden . ,(cond ((or (eq? stencil #f) (eq? transparent #t)) #t)
+            ((ly:stencil? stencil) (ly:stencil-empty? stencil)) (else 'null)))
+          (custom . ,(if custom #t #f))
+          (glyph . ,(if (string? glyph) glyph 'null))
+          (parenthesized . ,(eq? (ly:grob-property-data grob 'parenthesized) #t))
+          (restore-first . ,(eq? (ly:grob-property-data grob 'restore-first) #t))
+          (color . ,(let ((value (xml-color-components (ly:grob-property-data grob 'color))))
+           (if (and (list? value) (memv (length value) '(3 4)) (every number? value)) (xml-color value) 'null)))
+          (font-points . ,(if (and (not custom) (ly:stencil? stencil) (not (ly:stencil-empty? stencil))) (xml-script-font-points grob) 'null)))))
+       (reverse (hashq-ref members original '()))))))))
+   (reverse xml-accidental-originals))))
+\layout {
+ \context { \Staff \consists #xml-accidental-engraver }
+ \context { \TabStaff \consists #xml-accidental-engraver }
+ \context { \DrumStaff \consists #xml-accidental-engraver }
+ \context { \RhythmicStaff \consists #xml-accidental-engraver }
+}
+
+% Score lifecycle owned by this collector.
+#(xml-define-collector-state accidentals layout
+ (xml-accidental-originals xml-accidental-count)
+ (reset (xml-reset-accidentals!))
+ (clear (xml-reset-accidentals!)))

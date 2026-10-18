@@ -1,0 +1,52 @@
+{
+  "name": "lilypond-to-musicxml-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "license": "GPL-3.0-or-later",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "type": "module",
+  "scripts": {
+    "predev": "npm --prefix .. run build:listener",
+    "dev": "vite --host 0.0.0.0",
+    "prebuild": "npm --prefix .. run build:listener",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run build"
+  },
+  "dependencies": {
+    "@fontsource-variable/rubik": "5.3.0",
+    "@sightread/lilypond-wasm": "0.2.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "comlink": "4.4.2",
+    "lucide-react": "1.59.0",
+    "radix-ui": "1.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-dropzone": "20.1.4",
+    "tailwind-merge": "3.7.0",
+    "verovio": "6.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "7.3.7"
+  }
+}

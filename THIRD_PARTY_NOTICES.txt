@@ -1,0 +1,45 @@
+# Third-party notices
+
+## @sightread/lilypond-eventdocument 0.1.1 — GPL-3.0-or-later
+
+Copyright (C) 2026 Jake Fried.
+Embedded in src/lilypond/generated/listener.ts and modified for multi-score
+processing and expanded notation, layout, text, and playback extraction.
+Modifications documented: 2026-10-17. The pinned dependency includes the original
+source; patches/ and src/lilypond/listener/ contain the adaptations, combined by
+tools/build-listener.ts.
+https://github.com/sightread/lilypond-eventdocument
+
+## LilyPond 2.26.0 — GPL-3.0-or-later
+
+Copyright (C) 1997–2026 Han-Wen Nienhuys.
+Paper margin normalization adapted in src/musicxml/layout/paper.ts.
+Adaptation documented: 2026-10-17.
+https://github.com/lilypond/lilypond/blob/v2.26.0/lily/output-def.cc
+
+## @sightread/lilypond-wasm 0.2.0 — individual component licenses
+
+Includes LilyPond and supporting libraries. Its LICENSE, licenses/, and
+dist/THIRD-PARTY-NOTICES.txt must accompany runtime redistribution.
+Runtime type declarations are reproduced in src/declarations/wasm-runtime.d.ts.
+https://github.com/sightread/lilypond-wasm
+
+## xmlbuilder2 — MIT
+
+Copyright (C) Ozgur Ozcitak.
+Additional browser-bundle notices: lib/xmlbuilder2.min.js.LICENSE.txt.
+https://github.com/oozcitak/xmlbuilder2
+
+## MusicXML 4.0 schemas — W3C Community Final Specification Agreement
+
+Copyright © 2004–2021 the Contributors to the MusicXML Specification.
+Included in test/fixtures/schema/; only import paths were changed for offline use.
+Source: https://github.com/w3c/musicxml/tree/v4.0/schema
+License: https://www.w3.org/community/about/agreements/final/
+
+## Verovio 6.3.0 — LGPL-3.0-or-later
+
+Copyright (C) Laurent Pugin and contributors.
+Used in development tests and the frontend example. The frontend distribution
+includes its attribution and LGPL-3.0 license text.
+https://github.com/rism-digital/verovio

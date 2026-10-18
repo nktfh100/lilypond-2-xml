@@ -1,0 +1,56 @@
+% Collector snapshots retain grob, event, and table identity. User Scheme state
+% remains outside this registry. Each collector declares its own fields and reset.
+#(use-modules (srfi srfi-9))
+#(define-record-type <xml-collector-state>
+ (make-xml-collector-state name fields phase save restore reset clear)
+ xml-collector-state?
+ (name xml-collector-name)
+ (fields xml-collector-fields)
+ (phase xml-collector-phase)
+ (save xml-collector-save)
+ (restore xml-collector-restore)
+ (reset xml-collector-reset)
+ (clear xml-collector-clear))
+#(define xml-score-collectors '())
+#(define (xml-register-score-collector! collector)
+ (when (any (lambda (existing)
+   (or (eq? (xml-collector-name collector) (xml-collector-name existing))
+       (any (lambda (field) (memq field (xml-collector-fields existing)))
+            (xml-collector-fields collector)))) xml-score-collectors)
+  (error "Duplicate LilyPond-to-MusicXML collector state" (xml-collector-name collector)))
+ (set! xml-score-collectors (append xml-score-collectors (list collector))))
+#(define-syntax xml-define-collector-state
+ (syntax-rules ()
+  ((_ owner phase (name ...) (reset reset-body ...) (clear clear-body ...))
+   (xml-register-score-collector!
+    (make-xml-collector-state 'owner '(name ...) 'phase
+     (lambda () (list name ...))
+     (lambda (state)
+      (unless (and (list? state) (= (length state) (length '(name ...))))
+       (error "Invalid LilyPond-to-MusicXML collector state" 'owner))
+      (for-each (lambda (put value) (put value))
+       (list (lambda (value) (set! name value)) ...) state))
+     (lambda () reset-body ... #t)
+     (lambda () clear-body ... #t))))))
+#(define (xml-save-score-state)
+ (map (lambda (collector)
+  (cons (xml-collector-name collector) ((xml-collector-save collector)))) xml-score-collectors))
+#(define (xml-restore-score-state! state)
+ (unless (and (list? state) (= (length state) (length xml-score-collectors)))
+  (error "Invalid LilyPond-to-MusicXML score state"))
+ (for-each (lambda (collector saved)
+  (unless (and (pair? saved) (eq? (car saved) (xml-collector-name collector)))
+   (error "Mismatched LilyPond-to-MusicXML collector state" (xml-collector-name collector)))
+  ((xml-collector-restore collector) (cdr saved))) xml-score-collectors state))
+#(define (xml-reset-collectors! phase)
+ (for-each (lambda (collector)
+  (when (eq? phase (xml-collector-phase collector)) ((xml-collector-reset collector)))) xml-score-collectors))
+#(define (xml-clear-collected-layout!)
+ (for-each (lambda (collector) ((xml-collector-clear collector))) xml-score-collectors))
+#(define (xml-reset-semantic-state!) (xml-reset-collectors! 'semantic))
+
+% Score lifecycle owned by this collector.
+#(xml-define-collector-state events semantic
+ (ed-context-table ed-contexts ed-next-context-id ed-events ed-header ed-tuplet-count ed-note-count ed-pending-beams ed-pending-tuplets ed-score-index ed-book-headers)
+ (reset (set! ed-context-table (make-hash-table)) (set! ed-contexts '()) (set! ed-next-context-id 0) (set! ed-events '()) (set! ed-pending-beams '()) (set! ed-pending-tuplets '()) (set! ed-tuplet-count 0) (set! ed-note-count 0))
+ (clear ))

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+dist-browser/
+*.tgz
+*.tsbuildinfo
+.DS_Store

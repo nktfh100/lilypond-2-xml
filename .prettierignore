@@ -1,0 +1,8 @@
+src/lilypond/generated/listener.ts
+node_modules
+dist
+coverage
+dist-browser
+test-results
+playwright-report
+package-lock.json

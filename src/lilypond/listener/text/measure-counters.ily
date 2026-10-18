@@ -1,0 +1,145 @@
+% Observe actual standard counter print text, without invoking formatters twice.
+#(define-record-type <xml-measure-counter-entry>
+   (make-xml-measure-counter-entry grob id context staff moment stencil after-line-breaking)
+   xml-measure-counter-entry?
+   (grob xml-measure-counter-grob)
+   (id xml-measure-counter-id)
+   (context xml-measure-counter-context)
+   (staff xml-measure-counter-staff)
+   (moment xml-measure-counter-moment)
+   (stencil xml-measure-counter-stencil)
+   (after-line-breaking xml-measure-counter-after-line-breaking))
+#(define xml-measure-counter-originals '())
+#(define xml-measure-counter-count 0)
+#(define xml-measure-counter-texts (make-hash-table))
+#(define (xml-clear-measure-counters!)
+   (set! xml-measure-counter-originals '())
+   (set! xml-measure-counter-texts (make-hash-table)))
+#(define (xml-reset-measure-counters!)
+   (xml-clear-measure-counters!)
+   (set! xml-measure-counter-count 0))
+#(define (xml-measure-counter-print grob observed)
+   (let ((raw (ly:grob-property-data grob 'text)))
+     (cond
+      ((procedure? raw)
+       (ly:grob-set-property! grob 'text
+        (lambda (actual)
+          (let ((value (raw actual)))
+            (hashq-set! observed actual (cons #t value))
+            value))))
+      ((markup? raw) (hashq-set! observed grob (cons #t raw)))))
+   (ly:text-interface::print grob))
+#(define (xml-measure-counter-font-context grob)
+   (catch #t
+    (lambda ()
+     (let* ((layout (ly:grob-layout grob))
+            (props (ly:grob-alist-chain grob (ly:output-def-lookup layout 'text-font-defaults)))
+            (encoding (chain-assoc-get 'font-encoding props 'latin1)))
+       (cond ((eq? encoding 'fetaText) (xml-figure-number-font-context layout props))
+             ((eq? encoding 'latin1) (xml-text-font-context layout props))
+             (else 'null))))
+    (lambda args 'null)))
+#(define (xml-measure-counter-engraver ctx)
+   (make-engraver
+    (acknowledgers
+     ((measure-counter-interface engraver grob source)
+      (when (and (eq? ctx (ly:translator-context source))
+                 (eq? (assoc-get 'name (ly:grob-property grob 'meta)) 'MeasureCounter))
+        (set! xml-measure-counter-count (+ 1 xml-measure-counter-count))
+        (xml-geometry-observe-root! ctx)
+        (let ((raw (xml-bracket-stencil grob)))
+          (set! xml-measure-counter-originals
+           (cons (make-xml-measure-counter-entry
+                   grob
+                   xml-measure-counter-count
+                   (ed-context-id ctx)
+                   (ed-context-id (xml-script-staff ctx))
+                   (ly:context-current-moment ctx)
+                   raw
+                   (ly:grob-property-data grob 'after-line-breaking))
+                 xml-measure-counter-originals))
+          (when (eq? raw ly:text-interface::print)
+            (let ((observed xml-measure-counter-texts))
+              (ly:grob-set-property! grob 'stencil
+                (lambda (actual) (xml-measure-counter-print actual observed)))))))))
+    ((stop-translation-timestep engraver)
+     (xml-observe-line-measure! ctx))))
+
+#(define (xml-final-measure-counters)
+   (append-map
+    (lambda (entry)
+     (let ((piece 0)
+           (staff-id (xml-measure-counter-staff entry)))
+      (map (lambda (grob)
+        (set! piece (+ 1 piece))
+        (let* ((left (xml-duration-bound (ly:spanner-bound grob LEFT #f)))
+               (right (xml-duration-bound (ly:spanner-bound grob RIGHT #f)))
+               (start (and left (cadr left)))
+               (end (and right (cadr right)))
+               (moment (if (ly:moment? start)
+                           start
+                           (xml-measure-counter-moment entry)))
+               (raw (xml-measure-counter-stencil entry))
+               (after (xml-measure-counter-after-line-breaking entry))
+               (stencil (ly:grob-property grob 'stencil #f))
+               (live (and (grob::is-live? grob) (ly:stencil? stencil) (not (ly:stencil-empty? stencil))))
+               (observed (hashq-ref xml-measure-counter-texts grob #f))
+               (text (and observed (cdr observed)))
+               (system (ly:grob-system grob))
+               (layout-space (ly:output-def-lookup (ly:grob-layout grob) 'staff-space #f))
+               (scale (and (number? layout-space) (> layout-space 0) (/ 10 layout-space)))
+               (origin (xml-line-origin system start staff-id))
+               (staff (xml-geometry-unique-staff system staff-id))
+               (top (xml-geometry-staff-top staff system))
+               (font (and observed (xml-measure-counter-font-context grob)))
+               (generic-font (and observed (xml-name-font-context grob)))
+               (same-font (and (list? font) (list? generic-font)
+                 (equal? (assoc-get 'attrs font) (assoc-get 'attrs generic-font)))))
+          `((k . measure-counter)
+            (id . ,(xml-measure-counter-id entry))
+            (piece . ,piece)
+            (context . ,(xml-measure-counter-context entry))
+            (s . ,staff-id)
+            (m . ,(ly:moment-main moment))
+            (g . ,(ly:moment-grace moment))
+            (resolved-start . ,(ly:moment? start))
+            (end-m . ,(if (ly:moment? end) (ly:moment-main end) 'null))
+            (end-g . ,(if (ly:moment? end) (ly:moment-grace end) 'null))
+            (left-kind . ,(if left (car left) 'null))
+            (right-kind . ,(if right (car right) 'null))
+            (text . ,(if observed (ed-markup->string text) 'null))
+            (markup . ,(if (and observed (markup? text)) (xml-markup-tree text) 'null))
+            (font-context . ,(or font 'null))
+            (font-encoding . ,(let* ((layout (ly:grob-layout grob))
+               (props (ly:grob-alist-chain grob (ly:output-def-lookup layout 'text-font-defaults)))
+               (name (chain-assoc-get 'font-name props #f))
+               (encoding (if (string? name) 'latin1 (chain-assoc-get 'font-encoding props 'latin1))))
+                (if (memq encoding '(fetaText latin1)) encoding 'null)))
+            (music-fonts . ,(if same-font (xml-name-music-fonts grob text) 'null))
+            (color . ,(xml-color (ly:grob-property grob 'color #f)))
+            (hidden . ,(or (eq? raw #f) (not live) (eq? (ly:grob-property grob 'transparent #f) #t)))
+            (custom . ,(or (not (or (eq? raw #f) (eq? raw ly:text-interface::print)))
+                          (not (or (eq? after #f) (null? after)))))
+            (x-tenths . ,(if (and live scale origin) (* scale
+              (- (+ (ly:grob-relative-coordinate grob system X) (xml-geometry-render-extra grob X))
+                 (ly:grob-relative-coordinate (car origin) system X))) 'null))
+            (y-tenths . ,(if (and live scale top) (* scale
+              (- (+ (ly:grob-relative-coordinate grob system Y) (xml-geometry-render-extra grob Y)) top)) 'null))
+            (x-ref-m . ,(if origin (ly:moment-main (cdr origin)) 'null))
+            (x-ref-g . ,(if origin (ly:moment-grace (cdr origin)) 'null))
+            (staff-space . ,(ly:staff-symbol-staff-space grob))
+            (layout-staff-space . ,(or layout-space 'null)))))
+       (xml-geometry-broken-pieces (xml-measure-counter-grob entry)))))
+    (reverse xml-measure-counter-originals)))
+\layout {
+  \context { \Staff \consists #xml-measure-counter-engraver }
+  \context { \DrumStaff \consists #xml-measure-counter-engraver }
+  \context { \RhythmicStaff \consists #xml-measure-counter-engraver }
+  \context { \TabStaff \consists #xml-measure-counter-engraver }
+}
+
+% Score lifecycle owned by this collector.
+#(xml-define-collector-state measure-counters layout
+ (xml-measure-counter-originals xml-measure-counter-count xml-measure-counter-texts)
+ (reset (xml-reset-measure-counters!))
+ (clear (xml-clear-measure-counters!)))

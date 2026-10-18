@@ -1,0 +1,97 @@
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone:not([aria-disabled='true']):hover {
+    border-color: var(--ember);
+    background: #f7f2eb;
+  }
+  .upload-zone:not([aria-disabled='true']):hover .score-file {
+    transform: translateY(-3px) rotate(0);
+    color: var(--primary);
+    border-color: var(--ember);
+    box-shadow: 3px 6px 0 var(--accent);
+  }
+  .page-footer a:hover {
+    color: var(--foreground);
+  }
+  .page-footer a:hover svg:last-child {
+    transform: translate(2px, -2px) rotate(-45deg);
+  }
+}
+@media (max-width: 700px) {
+  .page-shell {
+    padding: 44px 16px 22px;
+  }
+  .converter-panel {
+    padding: 12px;
+    border-radius: 14px;
+  }
+  .input-toolbar {
+    gap: 5px;
+  }
+  [data-slot='tabs-trigger'] {
+    min-width: 0;
+    padding-inline: 10px;
+  }
+  .example-button {
+    font-size: 13px;
+    padding-inline: 6px;
+  }
+  .upload-zone {
+    min-height: 290px;
+    padding-inline: 14px;
+  }
+  .convert-toolbar {
+    flex-direction: column-reverse;
+    gap: 16px;
+    padding: 14px 0 5px;
+  }
+  .convert-button {
+    width: 100%;
+    min-height: 48px;
+  }
+  .page-footer {
+    margin-top: 38px;
+  }
+  .code-editor textarea {
+    font-size: 16px;
+    min-height: 280px;
+  }
+  .page-shell[data-has-result='true'] {
+    padding-top: 32px;
+  }
+  .comparison {
+    margin-top: 44px;
+  }
+  .comparison-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .comparison-toolbar > button {
+    width: 100%;
+  }
+  .comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .score-viewport {
+    height: 420px;
+  }
+  .preview-controls {
+    padding-inline: 5px;
+  }
+  .preview-controls button {
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 380px) {
+  .input-toolbar {
+    flex-wrap: wrap;
+  }
+  .example-button {
+    margin-left: auto;
+  }
+  .zoom-controls button[aria-label^='Reset'] svg {
+    display: none;
+  }
+}

@@ -1,0 +1,144 @@
+diff --git a/node_modules/@sightread/lilypond-eventdocument/event-document.ily b/node_modules/@sightread/lilypond-eventdocument/event-document.ily
+index 105d1b2..85af020 100644
+--- a/node_modules/@sightread/lilypond-eventdocument/event-document.ily
++++ b/node_modules/@sightread/lilypond-eventdocument/event-document.ily
+@@ -100,18 +100,18 @@
+ 
+ %% The event properties we keep. Add to this as we realize we need more.
+ #(define ed-event-props
+-   '(articulation-type span-direction direction text digit numerator denominator
++   '(xml-text-column-id articulation-type span-direction direction text digit numerator denominator
+      metronome-count tempo-unit tonic pitch-alist volta-numbers alternative-number
+      alternative-dir type bar-type repeat-count span-type span-text tremolo-type label pitch
+      drum-type force-accidental cautionary parenthesize tweaks string-number delta-step
+      stroke-finger-digit stroke-finger-text))
+ 
+ #(define (ed-event-alist ev)
+-   (filter-map
++   (append (filter-map
+     (lambda (key)
+       (let ((v (ly:event-property ev key '())))
+         (and (not (null? v)) (cons key (ed-value v)))))
+-    ed-event-props))
++    ed-event-props) (let ((text (ly:event-property ev 'text #f)) (cue (ly:event-property ev 'xml-cue-id #f)) (script (xml-script-id ev))) (append (if script `((xml-script-id . ,script)) '()) (if cue `((xml-cue-id . ,cue)) '()) (if (markup? text) `((xml-markup . ,(xml-markup-tree text))) '())))))
+ 
+ %% A note's own post-events (`c4-.~`), as opposed to the chord's (`<c e>4-.~`), which arrive
+ %% as separate events in the same timestep.
+@@ -292,6 +292,7 @@
+                          (a . ,(list->vector
+                                 (map ed-articulation
+                                      (ly:event-property event 'articulations '()))))
++                         (cluster . ,(and (memq 'cluster-note-event (ly:event-property event 'class)) #t))
+                          (slash . ,(and grace (ed-grace-slash? ctx)))
+                          (hidden . ,(ed-hidden-note? ctx))
+                          (stemhidden . ,(ed-hidden-stem? ctx))
+@@ -513,6 +514,7 @@
+    (make-engraver
+     (listeners
+      (note-event . ed-note)
++     (cluster-note-event . ed-note)
+      (rest-event . ed-rest-event)
+      (multi-measure-rest-event . ed-mmrest-event)
+      (skip-event . ed-skip-event)
+@@ -630,10 +632,20 @@
+                        (instrument . ,(ed-value (ly:context-property ctx 'instrumentName "")))
+                        (short . ,(ed-value (ly:context-property ctx 'shortInstrumentName "")))))))))
+ 
++#(define (ed-break-event engraver event)
++     (ed-push! (ly:translator-context engraver)
++       `((k . layout)
++         (c . ,(car (ly:event-property event 'class)))
++         (permission . ,(let ((permission (ly:event-property event 'break-permission))) (if (null? permission) #f permission))))))
++
+ #(define (ed-score-engraver ctx)
++   (xml-normal-start-score! ctx)
+    (let ((last-step #f) (last-tempo #f))
+      (make-engraver
+       (listeners
++       (line-break-event . ed-break-event)
++       (page-break-event . ed-break-event)
++       (page-turn-event . ed-break-event)
+        (tempo-change-event . ed-score-event)
+        (time-signature-event . ed-score-event)
+        (bar-event . ed-score-event)
+@@ -659,7 +671,7 @@
+                              (ly:context-property ctx 'timeSignature)
+                              ;; \cadenzaOn: timing off, the bar stops counting.
+                              (ly:context-property ctx 'timing #t))))
+-             (when (not (equal? step last-step))
++             (when (and (integer? (first step)) (number? (second step)) (not (equal? step last-step)))
+                (set! last-step step)
+                (ed-push! ctx `((k . step)
+                                (bar . ,(ed-value (first step)))
+@@ -673,7 +685,7 @@
+                  (set! last-tempo tempo)
+                  (ed-push! ctx `((k . tempo) (wholes-per-minute . ,(ed-value tempo))))))))))
+       ((finalize engraver)
+-       (ed-guard 'write-json ed-write-json!)))))
++       (ed-guard 'flush-events (lambda () (ed-flush-beams!) (ed-flush-tuplets!)))))))
+ 
+ %%% ---------------------------------------------------------------- output
+ 
+@@ -692,14 +704,14 @@
+       keys)))
+ 
+ #(define (ed-write-json!)
+-   (let* ((name (string-append (ly:parser-output-name) ".events.json"))
++   (let* ((name (format #f "~a.~a.events.json" (ly:parser-output-name) ed-score-index))
+           (port (open-output-file name)))
+      (ed-flush-beams!)
+      (ed-flush-tuplets!)
+      (ed-json `((version . 1)
+                 (source . ,(basename (ly:parser-lookup 'input-file-name)))
+                 (lilypond . ,(lilypond-version))
+-                (header . ,ed-header)
++                (header . ,ed-header) (layout-requested . ,xml-normal-source-layout) (page-layouts-captured . ,xml-normal-enabled) (page-layouts . ,(list->vector xml-page-layouts)) (page-credits-captured . ,xml-normal-enabled) (page-credits . ,(list->vector xml-page-credits)) (header-markup . ,xml-header-markup) (header-scopes . ,xml-header-scopes) (header-styles . ,xml-header-styles) (header-style-base . ,xml-header-style-base) (page-header-markup . ,xml-page-header-markup) (paper . ,ed-paper) (barlines-captured . #t) (barline-layouts-captured . #t) (accidentals-captured . #t) (names-captured . #t) (scripts-captured . #t) (breaths-captured . #t) (arpeggios-captured . #t) (brackets-captured . #t) (duration-lines-captured . #t) (ligatures-captured . #t) (finger-glides-captured . #t) (episemas-captured . #t) (optional-material-captured . #t) (bends-captured . #t) (measure-counters-captured . #t) (footnotes-captured . #t) (lyric-extenders-captured . #t) (note-positions-captured . #t) (measure-layouts-captured . #t) (labels-captured . #t) (combine-text-captured . #t) (vowel-transitions-captured . #t) (clusters-captured . #t) (slurs-captured . #t) (glissandos-captured . #t) (ties-captured . #t) (cue-quotes . ,xml-cue-quotes)
+                 (contexts . ,(list->vector (reverse ed-contexts)))
+                 (events . ,(list->vector (reverse ed-events))))
+               port)
+@@ -726,24 +738,32 @@
+ 
+ %% A file can hand us several books (each explicit \book, then whatever was left at top
+ %% level); the first one with a score that has notes is the piece, the rest are ignored.
+-#(define ed-done #f)
+-
+-#(define (ed-book-handler book)
+-   (let* ((scores (ed-scores-of-book book))
+-          (score (find (lambda (s) (ed-music-has-notes? (ly:score-music s))) scores)))
+-     (cond
+-      (ed-done (ly:progress "lilypond-event-document: ignoring a later book\n"))
+-      ((not score) (ly:progress "lilypond-event-document: no score with notes in this book\n"))
+-      (else (set! ed-done #t) (ed-import-score score scores)))))
++#(define ed-score-index 0)
++#(define ed-book-headers '())
++#(define (ed-process-book book inherited papers)
++   (set! ed-book-headers (cons (ly:book-header book) inherited))
++   (let ((first-score #t))
++   (for-each
++    (lambda (score)
++      (set! xml-header-book-start first-score)
++      (set! first-score #f)
++      (set! ed-score-index (+ ed-score-index 1))
++      (xml-reset-semantic-state!)
++      (set! ed-book-papers (if (ly:output-def? (ly:book-paper book)) (cons (ly:book-paper book) papers) papers))
++      (ed-import-score score (list score)))
++    (reverse (filter ly:score? (ly:book-scores book)))))
++   (let ((headers (cons (ly:book-header book) inherited)))
++     (for-each (lambda (part) (ed-process-book part headers (if (ly:output-def? (ly:book-paper book)) (cons (ly:book-paper book) papers) papers)))
++               (reverse (ly:book-book-parts book)))))
++#(define (ed-book-handler book) (ed-process-book book '() '()))
+ 
+ #(define (ed-import-score score scores)
+    (begin
+-     (ly:progress "lilypond-event-document: ~a score(s) in file, importing the first with notes\n"
++     (ly:progress "lilypond-event-document: ~a score(s) in file, extracting score\n"
+                   (length scores))
+-     (set! ed-header (ed-header-alist (ly:score-header score)
+-                                      (ly:parser-lookup '$defaultheader)))
++     (set! ed-header (apply ed-header-alist (append (list (ly:score-header score)) ed-book-headers (list (ly:parser-lookup '$defaultheader)))))
+      ;; Translation only: the engravers above see every event, and no page is ever laid out.
+-     (ly:run-translator (ly:score-music score) (ed-layout-def score))))
++     (let ((layout (ed-layout-def score))) (xml-capture-page-headers) (xml-capture-header-fonts) (set! ed-paper (xml-paper-settings layout score)) (xml-run-score (ly:score-music score) layout score))))
+ 
+ %% The score's \layout block when it has one (it was cloned from $defaultlayout after this
+ %% file added its engravers, so they are in it), else $defaultlayout. A layout block inside

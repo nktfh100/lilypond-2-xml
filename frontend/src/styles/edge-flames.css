@@ -1,0 +1,117 @@
+.edge-flames::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 1.5px rgb(180 63 63 / 0.4),
+    0 4px 24px rgb(180 63 63 / 0.12);
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+.edge-flames {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.edge-flames svg {
+  --drift: -7px;
+  --turn: -10deg;
+  position: absolute;
+  left: -6px;
+  bottom: 14%;
+  width: 10px;
+  height: 22px;
+  fill: var(--primary);
+  opacity: 0;
+  transform-origin: center bottom;
+  animation-duration: 1100ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-fill-mode: both;
+}
+.edge-flames svg:nth-child(2) {
+  --drift: 7px;
+  --turn: 10deg;
+  left: auto;
+  right: -6px;
+  bottom: 20%;
+}
+.edge-flames svg:nth-child(3) {
+  bottom: 58%;
+  width: 7px;
+  height: 17px;
+}
+.edge-flames svg:nth-child(4) {
+  --drift: 5px;
+  --turn: 8deg;
+  left: auto;
+  right: -5px;
+  bottom: 64%;
+  width: 8px;
+  height: 18px;
+}
+
+.edge-flames {
+  border-radius: inherit;
+}
+.upload-zone:is(:focus-visible, :active) > .edge-flames[data-disabled='false']::after,
+.edge-flames[data-active='true']::after {
+  opacity: 1;
+}
+.upload-zone:is(:focus-visible, :active) > .edge-flames[data-disabled='false'] svg,
+.edge-flames[data-active='true'] svg {
+  animation-name: edge-flame-rise;
+}
+.edge-flames[data-active='true'] svg {
+  animation-iteration-count: infinite;
+}
+@media (hover: hover) {
+  .upload-zone:hover > .edge-flames[data-disabled='false']::after {
+    opacity: 1;
+  }
+  .upload-zone:hover > .edge-flames[data-disabled='false'] svg {
+    animation-name: edge-flame-rise;
+  }
+  .upload-zone:hover > .edge-flames[data-active='true'] svg {
+    animation-iteration-count: infinite;
+  }
+}
+.edge-flames svg:nth-child(2) {
+  animation-delay: 80ms;
+}
+.edge-flames svg:nth-child(3) {
+  animation-delay: 160ms;
+}
+.edge-flames svg:nth-child(4) {
+  animation-delay: 240ms;
+}
+@keyframes edge-flame-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(9px) scale(0.45, 0.7);
+  }
+  14% {
+    opacity: 0.85;
+    transform: translateY(0) scale(1);
+  }
+  60% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift), -58px) rotate(var(--turn)) scale(0.25, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-flames {
+    display: block;
+  }
+  .edge-flames svg {
+    display: none;
+  }
+  .edge-flames::after {
+    transition: none;
+  }
+}

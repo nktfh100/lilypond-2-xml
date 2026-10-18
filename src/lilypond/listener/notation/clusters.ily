@@ -1,0 +1,73 @@
+#(define (xml-cluster-engraver ctx)
+   (let ((notes '()) (beacons '()) (spanners '()))
+     (define (remember grob source kind)
+       (when (eq? ctx (ly:translator-context source))
+         (if (eq? kind 'beacon)
+             (set! beacons (cons grob beacons))
+             (set! spanners (cons grob spanners)))))
+     (define (columns spanner)
+       (let ((value (ly:grob-object spanner 'columns #f)))
+         (if (ly:grob-array? value) (ly:grob-array->list value) '())))
+     (define (moment-key moment)
+       (cons (ly:moment-main moment) (ly:moment-grace moment)))
+     (make-engraver
+      (listeners
+       ((cluster-note-event engraver event)
+        ; The ordinary note handler assigns ed-note-id on this same event.
+        (set! notes (cons (list event (ly:context-current-moment ctx)) notes))))
+      (acknowledgers
+       ((cluster-beacon-interface engraver grob source) (remember grob source 'beacon))
+       ((cluster-interface engraver grob source) (remember grob source 'spanner)))
+      ((finalize engraver)
+       (let ((seen '()))
+         (for-each
+          (lambda (entry)
+            (let* ((moment (cadr entry)) (key (moment-key moment)))
+              (unless (member key seen)
+                (set! seen (cons key seen))
+                (ed-guard 'cluster
+                  (lambda ()
+                    (let* ((events (map car (filter (lambda (other)
+                                           (equal? key (moment-key (cadr other)))) (reverse notes))))
+                           (ids (filter-map (lambda (event)
+                                  (let ((id (ly:event-property event 'ed-note-id #f)))
+                                    (and (integer? id) (> id 0) id))) events))
+                           (matching (filter (lambda (beacon)
+                                       (memq (ly:grob-property beacon 'cause #f) events)) beacons))
+                           (beacon (and (= (length matching) 1) (car matching)))
+                           (owners (if beacon (filter (lambda (spanner) (memq beacon (columns spanner))) spanners) '()))
+                           (spanner (and (= (length owners) 1) (car owners)))
+                           (present (and beacon spanner #t))
+                           (style (and spanner (ly:grob-property spanner 'style 'null)))
+                           (normal-style (memq style '(ramp leftsided-stairs rightsided-stairs centered-stairs)))
+                           (stencil (and spanner (ly:grob-property-data spanner 'stencil)))
+                           (after (and spanner (ly:grob-property-data spanner 'after-line-breaking)))
+                           (empty-stairs (and spanner (memq style '(leftsided-stairs rightsided-stairs))
+                                              (< (length (columns spanner)) 2)))
+                           (positions (and beacon (ly:grob-property beacon 'positions #f)))
+                           (hidden (or (not present) (not (grob::is-live? spanner))
+                                       (eq? stencil #f) (null? stencil)
+                                       (and (ly:stencil? stencil) (ly:stencil-empty? stencil)
+                                            (null? (ly:stencil-expr stencil)))
+                                       (eq? (ly:grob-property spanner 'transparent #f) #t)
+                                       (and (eq? stencil ly:cluster::print) (or (not normal-style) empty-stairs))))
+                           (custom (and present
+                                     (or (not (or (eq? stencil #f) (null? stencil) (eq? stencil ly:cluster::print)))
+                                         (not (or (eq? after #f) (null? after)))))))
+                      (set! ed-events
+                        (cons `((k . clustergraphic) (v . ,(ed-context-id ctx))
+                                (s . ,(ed-context-id (ly:context-parent ctx)))
+                                (notes . ,(list->vector ids))
+                                (m . ,(ly:moment-main moment)) (g . ,(ly:moment-grace moment))
+                                (present . ,present) (hidden . ,hidden) (custom . ,custom)
+                                (style . ,(if present (ed-value style) 'null))
+                                (color . ,(if present (xml-color (ly:grob-property spanner 'color #f)) #f))
+                                (positions . ,(if (and (pair? positions) (number? (car positions)) (number? (cdr positions)))
+                                                   (vector (+ 0.0 (car positions)) (+ 0.0 (cdr positions))) 'null)))
+                              ed-events))))))))
+          (reverse notes)))))))
+\layout {
+  \context { \Voice \consists #xml-cluster-engraver }
+  \context { \DrumVoice \consists #xml-cluster-engraver }
+  \context { \TabVoice \consists #xml-cluster-engraver }
+}
