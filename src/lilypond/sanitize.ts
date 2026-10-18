@@ -538,7 +538,7 @@ const replaceInRenderedText = (
     return value.replace(pattern, replacement);
   };
 
-  for (let index = 0; index < text.length; ) {
+  for (let index = 0; index < text.length;) {
     const start = index;
     const char = text[index]!;
     const inText: boolean =

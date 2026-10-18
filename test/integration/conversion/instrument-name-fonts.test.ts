@@ -462,9 +462,8 @@ test('inline name accidentals use actual selected music font points instead of i
       }));
 
     assert.ok(observed.length >= 6, `${name}: actual source leaves were measured`);
-    const expected = Array.from(
-      { length: 6 },
-      (_, index) => observed.find((o) => o.index === index)!,
+    const expected = Array.from({ length: 6 }, (_, index) =>
+      observed.find((o) => o.index === index)!,
     );
 
     assert.ok(expected.every(Boolean));

@@ -39,7 +39,10 @@ test('large graphical direction offsets retain exact timing without reader overf
     .filter((node) => node.node.nodeName === 'bracket', false, true)
     .map((node) => node.toString());
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   const xml = root.toString();
 
   validate(xml);
@@ -74,7 +77,10 @@ test('per-measure units restore the original scale when a later measure needs fi
   );
   const before = musicXmlWrittenNotes(root.toString());
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   validate(root.toString());
   assert.deepEqual(
     root
@@ -90,7 +96,10 @@ test('attack, release and offset units share the same exact reduction', () => {
     `<measure number="1"><attributes><divisions>100</divisions></attributes><direction><direction-type><words>Test</words></direction-type><offset>50</offset></direction>${note('C', 100, 'attack="25" release="-25"')}</measure>`,
   );
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   validate(root.toString());
   assert.equal(
     root.find((node) => node.node.nodeName === 'divisions', false, true)!.node.textContent,
@@ -105,7 +114,10 @@ test('a mid-measure key change does not delay the units for preceding notes', ()
   );
   const before = musicXmlWrittenNotes(root.toString());
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   validate(root.toString());
   assert.deepEqual(musicXmlWrittenNotes(root.toString()), before);
   assert.equal(root.filter((node) => node.node.nodeName === 'key', false, true).length, 1);
@@ -117,7 +129,10 @@ test('offsets before an existing divisions change retain their original units', 
   );
   const before = root.toString();
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   assert.equal(root.toString(), before);
 });
 
@@ -126,7 +141,10 @@ test('grace and navigation timing attributes retain the same quarter-note units'
     `<measure number="1"><attributes><divisions>100</divisions></attributes><direction><direction-type><words>Test</words></direction-type><sound divisions="100"/></direction><note><grace make-time="25"/><pitch><step>D</step><octave>4</octave></pitch><type>16th</type></note>${note('C', 100)}<barline divisions="100"><bar-style>regular</bar-style></barline></measure>`,
   );
 
-  reduceMeasureDivisions(root.find((node) => node.node.nodeName === 'part')!, add);
+  reduceMeasureDivisions(
+    root.find((node) => node.node.nodeName === 'part')!,
+    add,
+  );
   validate(root.toString());
   assert.match(root.toString(), /make-time="1"/);
   assert.match(root.toString(), /sound divisions="4"/);

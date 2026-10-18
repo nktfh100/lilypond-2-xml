@@ -81,8 +81,7 @@ for (const score of result.scores) {
       event.context satisfies number;
       event.staff satisfies number;
       event.rectangles satisfies
-        | readonly (readonly [number, number, number, number, number])[]
-        | null;
+        readonly (readonly [number, number, number, number, number])[] | null;
       event.xReference?.main.numerator satisfies number | undefined;
       event.passageDirection satisfies number;
     }
@@ -129,18 +128,14 @@ for (const score of result.scores) {
       event.figures[0]?.graphic satisfies boolean | undefined;
       event.figures[0]?.display satisfies import('lilypond-2-xml').TextMarkup | undefined;
       event.figures[0]?.continuation satisfies
-        | import('lilypond-2-xml').FigureContinuation
-        | undefined;
+        import('lilypond-2-xml').FigureContinuation | undefined;
       event.figures[0]?.continuation?.offset satisfies readonly [number, number] | undefined;
       event.figures[0]?.fontContext satisfies import('lilypond-2-xml').TextFontContext | undefined;
       event.figures[0]?.numberFontContext satisfies
-        | import('lilypond-2-xml').FigureNumberFontContext
-        | undefined;
+        import('lilypond-2-xml').FigureNumberFontContext | undefined;
       event.figures[0]?.columnUsed satisfies boolean | undefined;
       event.figures[0]?.column satisfies
-        | import('lilypond-2-xml').FiguredBassEvent['moment']
-        | null
-        | undefined;
+        import('lilypond-2-xml').FiguredBassEvent['moment'] | null | undefined;
       event.figures[0]?.color satisfies readonly number[] | null | undefined;
       event.figures[0]?.custom satisfies boolean | undefined;
       event.figures[0]?.extendTo satisfies number | null | undefined;

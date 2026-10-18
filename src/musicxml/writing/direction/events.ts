@@ -22,15 +22,13 @@ export function collectDirectionEvents(
         (a): a is Exclude<Attachment, { class: 'ignored' }> =>
           a.class !== 'ignored' && directionAttachments.has(a.class),
       )
-      .map(
-        (a): Event => ({
-          ...a,
-          kind: 'voice',
-          voice: required(e.voice, 'xml-measure-directions.ts: e.voice'),
-          staff: required(e.staff, 'xml-measure-directions.ts: e.staff'),
-          moment: e.moment,
-        }),
-      ),
+      .map((a): Event => ({
+        ...a,
+        kind: 'voice',
+        voice: required(e.voice, 'xml-measure-directions.ts: e.voice'),
+        staff: required(e.staff, 'xml-measure-directions.ts: e.staff'),
+        moment: e.moment,
+      })),
   ]);
   const events: Event[] = [];
   const seenDirections = new Set();
