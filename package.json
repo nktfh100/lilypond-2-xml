@@ -97,7 +97,7 @@
     "prettier": "3.9.10",
     "rimraf": "6.1.3",
     "tsx": "4.23.15",
-    "typescript": "6.0.3",
+    "typescript": "7.0.2",
     "typescript-eslint": "8.71.2",
     "verovio": "6.3.0",
     "vite": "8.3.4"
