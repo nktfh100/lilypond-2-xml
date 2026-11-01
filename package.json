@@ -86,7 +86,7 @@
     "xmlbuilder2": "4.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.5",
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.64.0",
     "@stylistic/eslint-plugin": "5.10.0",
     "@types/node": "20.19.43",
